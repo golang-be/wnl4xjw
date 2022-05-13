@@ -359,6 +359,40 @@ var obb={ //农历基础构件
   }
  },
 
+
+  // 排大运计算。
+  // jd为格林尼治UT(J2000起算),J为本地经度,返回在物件ob中
+  //    ob.bz_zty: 真太阳时间
+  //    ob.bz_jn: 年干支
+  //    ob.bz_jn_gan: 年干(不含支)
+  //    ob.bz_jy: 月干支
+  //    ob.bz_jr: 日干支
+  //    ob.bz_js: 纪时结果（单个）
+  //    ob.bz_JS: 带纪时结果标红的全天纪时的字符串
+  paiDaYun:function(jd,J,ob) {
+    var i, c, v;
+    var jd2 = jd+dt_T(jd); //力学时
+    var w = XL.S_aLon( jd2/36525, -1 ); //此刻太阳视黄经
+    var k = int2( (w/pi2*360+45+15*360)/30 ); //1984年立春起算的节气数(不含中气)
+    jd += pty_zty2(jd2/36525)+J/Math.PI/2; //本地真太阳时(使用低精度算法计算时差)
+    ob.bz_zty = JD.timeStr(jd);
+
+    jd += 13/24; //转为前一日23点起算(原jd为本日中午12点起算)
+    var D = Math.floor(jd), SC = int2( (jd-D)*12 ); //日数与时辰
+
+    v = int2(k/12+6000000);  ob.bz_jn = this.Gan[v%10]+this.Zhi[v%12];  ob.bz_jn_gan = this.Gan[v%10];
+    v = k+2+60000000;        ob.bz_jy = this.Gan[v%10]+this.Zhi[v%12];
+    v = D - 6 + 9000000;     ob.bz_jr = this.Gan[v%10]+this.Zhi[v%12];
+    v = (D-1)*12+90000000+SC;ob.bz_js = this.Gan[v%10]+this.Zhi[v%12];
+
+    v-= SC, ob.bz_JS = ''; //全天纪时表
+    for(i=0; i<13; i++){ //一天中包含有13个纪时
+      c = this.Gan[(v+i)%10]+this.Zhi[(v+i)%12]; //各时辰的八字
+      if(SC==i) ob.bz_js=c, c = '<font color=red>'+c+'</font>'; //红色显示这时辰
+      ob.bz_JS += (i?' ':'') + c;
+    }
+  },
+
  qi_accurate : function(W)  { var t=XL.S_aLon_t(W)*36525;  return t - dt_T(t) + 8/24; }, //精气
  so_accurate : function(W)  { var t=XL.MS_aLon_t(W)*36525; return t - dt_T(t) + 8/24; }, //精朔
  qi_accurate2: function(jd) { //精气
