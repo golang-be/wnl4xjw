@@ -398,6 +398,42 @@ var obb={ //农历基础构件
     }
   },
 
+  // 参考了qiCalc()函数
+  paiDaYun_JieQi:function(v_year, v_month) {
+    // 从上一年开始循环查找每个节气的"节"，忽略节气的"气"
+    var startYear = v_year-1;
+    var nMaxCnt = 72; // 最多查找72个节气(3年)
+
+    var i,T,s="",s2="";
+    var y = year2Ayear(startYear)-2000;
+    var n = nMaxCnt-0;
+    for(i = 0; i < n; i++) {
+      if ((i%2)==0) {
+        continue; // 跳过24节气中的"气"，只考虑obb.jqmc中1、3、5、7、9、11、13、15、17、19、21、23的下标
+      }
+      T = XL.S_aLon_t( (y+i*15/360+1)*2*Math.PI );    //精确节气时间计算
+      jd = T*36525+J2000+8/24-dt_T(T*36525);  // 儒略日
+      jd_str = JD.JD2str(jd);                 // 儒略日转字符串，形如："2008-03-20 13:48:17"
+      jqmc_str = obb.jqmc[(i+6)%24];          // 节气名称字符串，形如："春分"
+      s2 += jd_str + jqmc_str;                // 完整字串，形如："2008-03-20 13:48:17春分"
+
+      // TODO:  把所有jd_str转成Date对象A
+      //        把用户输入的时间转成Date对象B
+      //        (A-B)如果小于0，则记录下当前A为L，作为最邻近B的左侧值。然后开始计算下一个节的时间，继续转成Date对象A
+      //        (A-B)如果大于等于0了，则记录下当前A为R，作为最邻近B的右侧值。
+      //        L即为"关于该人生日的上一个节"
+      //        R即为"关于该人生日的下一个节"
+      //        因为保留了Date对象，所以可以计算和这人生日的所差秒数
+      //        按3天折1年，将总秒数除以(3*86400)后向下取整得到年
+      //        按1天折4个月，将(总秒数%(3*86400))，再除以86400后向下取整得到有多少个4个月
+      //        按1时辰折10天，将(总秒数%(86400))，再除以7200后向下取整到小数点后1位，得到有多少个10天
+
+
+      // if(i%2==1) s2+=' 视黄经'+(i*15)+'<br>'; else s2+='　'
+      // if(i%50==0) s+=s2,s2="";
+    }
+  },
+
  qi_accurate : function(W)  { var t=XL.S_aLon_t(W)*36525;  return t - dt_T(t) + 8/24; }, //精气
  so_accurate : function(W)  { var t=XL.MS_aLon_t(W)*36525; return t - dt_T(t) + 8/24; }, //精朔
  qi_accurate2: function(jd) { //精气
