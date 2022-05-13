@@ -364,11 +364,11 @@ var obb={ //农历基础构件
   // jd为格林尼治UT(J2000起算),J为本地经度,返回在物件ob中
   //    ob.bz_zty: 真太阳时间
   //    ob.bz_jn: 年干支
-  //    ob.bz_jn_gan: 年干(不含支)
   //    ob.bz_jy: 月干支
   //    ob.bz_jr: 日干支
   //    ob.bz_js: 纪时结果（单个）
   //    ob.bz_JS: 带纪时结果标红的全天纪时的字符串
+  //    ob.pdy_nian_yinyang: 排大运的阴年阳年，1表示阳年，0表示阴年。阳年(年干为甲、丙、戊、庚、壬)，阴年(年干为乙、丁、己、辛、癸)
   paiDaYun:function(jd,J,ob) {
     var i, c, v;
     var jd2 = jd+dt_T(jd); //力学时
@@ -380,7 +380,8 @@ var obb={ //农历基础构件
     jd += 13/24; //转为前一日23点起算(原jd为本日中午12点起算)
     var D = Math.floor(jd), SC = int2( (jd-D)*12 ); //日数与时辰
 
-    v = int2(k/12+6000000);  ob.bz_jn = this.Gan[v%10]+this.Zhi[v%12];  ob.bz_jn_gan = this.Gan[v%10];
+    v = int2(k/12+6000000);   ob.bz_jn = this.Gan[v%10]+this.Zhi[v%12];
+                              ob.pdy_nian_yinyang = (((v%10)%2) == 0)?(1):(0);
     v = k+2+60000000;        ob.bz_jy = this.Gan[v%10]+this.Zhi[v%12];
     v = D - 6 + 9000000;     ob.bz_jr = this.Gan[v%10]+this.Zhi[v%12];
     v = (D-1)*12+90000000+SC;ob.bz_js = this.Gan[v%10]+this.Zhi[v%12];

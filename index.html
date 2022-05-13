@@ -1202,14 +1202,8 @@ function PDY_calc() {
   // 计算输入时刻的上一个节
   // 计算输入时刻的下一个节
   // 计算指定时刻是阳年(年干为甲、丙、戊、庚、壬)还是阴年(年干为乙、丁、己、辛、癸)
-  var pdy_y_gan = ob.bz_jn_gan;
-  var pdy_y_yinyang = "阴年阳年判定错误";
-  if (["甲", "丙", "戊", "庚", "壬"].includes(pdy_y_gan)) {
-    pdy_y_yinyang = "阳年";
-  }
-  if (["乙", "丁", "己", "辛", "癸"].includes(pdy_y_gan)) {
-    pdy_y_yinyang = "阴年";
-  }
+  var pdy_y_yinyang = ob.pdy_nian_yinyang;
+  var pdy_y_yinyang_str = (pdy_y_yinyang==1)?("阳年"):("阴年");
   // 男命阳年或女命阴年，计算(下一个节-指定时刻)的差，3天折1年，算出几岁起运
   // 男命阴年或女命阳年，计算(指定时刻-上一个节)的差，3天折1年，算出几岁起运
   // 男命阳年或女命阴年，计算指定时刻的月柱干支的下一个干支
@@ -1220,7 +1214,7 @@ function PDY_calc() {
     + '<font color=red  ><b>[八字]：</b></font>'    + ob.bz_jn+'年 '+ob.bz_jy+'月 '+ob.bz_jr+'日 '+ob.bz_js+'时 真太阳 <font color=red>' + ob.bz_zty+ '</font><br>'
     + '<font color=green><b>[纪时]：</b></font><i>' + ob.bz_JS + '</i><br>'
     + '<font color=green><b>[时标]：</b></font><i>' + '23　 01　 03　 05　 07　 09　 11　 13　 15　 17　 19　 21　 23'
-    + '<br><font color=red  ><b>[阴阳年]：</b></font>'  + pdy_y_yinyang
+    + '<br><font color=red  ><b>[阴阳年]：</b></font>'  + pdy_y_yinyang_str
     ;
 }
 
