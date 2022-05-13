@@ -369,6 +369,8 @@ var obb={ //农历基础构件
   //    ob.bz_js: 纪时结果（单个）
   //    ob.bz_JS: 带纪时结果标红的全天纪时的字符串
   //    ob.pdy_nian_yinyang: 排大运的阴年阳年，1表示阳年，0表示阴年。阳年(年干为甲、丙、戊、庚、壬)，阴年(年干为乙、丁、己、辛、癸)
+  //    ob.pdy_jgz_prev: 月干支逆排(用于大运干支计算)
+  //    ob.pdy_jgz_next: 月干支顺排(用于大运干支计算)
   paiDaYun:function(jd,J,ob) {
     var i, c, v;
     var jd2 = jd+dt_T(jd); //力学时
@@ -382,9 +384,11 @@ var obb={ //农历基础构件
 
     v = int2(k/12+6000000);   ob.bz_jn = this.Gan[v%10]+this.Zhi[v%12];
                               ob.pdy_nian_yinyang = (((v%10)%2) == 0)?(1):(0);
-    v = k+2+60000000;        ob.bz_jy = this.Gan[v%10]+this.Zhi[v%12];
-    v = D - 6 + 9000000;     ob.bz_jr = this.Gan[v%10]+this.Zhi[v%12];
-    v = (D-1)*12+90000000+SC;ob.bz_js = this.Gan[v%10]+this.Zhi[v%12];
+    v = k+2+60000000;         ob.bz_jy = this.Gan[v%10]+this.Zhi[v%12];
+                              ob.pdy_jgz_prev = this.Gan[(v-1)%10]+this.Zhi[(v-1)%12];
+                              ob.pdy_jgz_next = this.Gan[(v+1)%10]+this.Zhi[(v+1)%12];
+    v = D - 6 + 9000000;      ob.bz_jr = this.Gan[v%10]+this.Zhi[v%12];
+    v = (D-1)*12+90000000+SC; ob.bz_js = this.Gan[v%10]+this.Zhi[v%12];
 
     v-= SC, ob.bz_JS = ''; //全天纪时表
     for(i=0; i<13; i++){ //一天中包含有13个纪时

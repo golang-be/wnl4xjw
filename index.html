@@ -1199,22 +1199,37 @@ function PDY_calc() {
   obb.paiDaYun( jd+curTZ/24-J2000, Cp51_J.value/radd, ob ); //八字计算
   // 计算性别
   var pdy_sex = Cpdy_sex.value; // 0为女，1为男
-  // 计算输入时刻的上一个节
-  // 计算输入时刻的下一个节
+  var pdy_sex_str = (pdy_sex == 1)?("男命"):("女命");
   // 计算指定时刻是阳年(年干为甲、丙、戊、庚、壬)还是阴年(年干为乙、丁、己、辛、癸)
   var pdy_y_yinyang = ob.pdy_nian_yinyang;
   var pdy_y_yinyang_str = (pdy_y_yinyang==1)?("阳年"):("阴年");
+  // 计算输入时刻的上一个节
+  // 计算输入时刻的下一个节
   // 男命阳年或女命阴年，计算(下一个节-指定时刻)的差，3天折1年，算出几岁起运
   // 男命阴年或女命阳年，计算(指定时刻-上一个节)的差，3天折1年，算出几岁起运
-  // 男命阳年或女命阴年，计算指定时刻的月柱干支的下一个干支
-  // 男命阴年或女命阳年，计算指定时刻的月柱干支的上一个干支
+
+  // 大运干支计算
+  // 男命阳年或女命阴年，计算指定时刻的月柱干支的下一个干支，作为大运干支
+  // 男命阴年或女命阳年，计算指定时刻的月柱干支的上一个干支，作为大运干支
+  var pdy_dygz_str = "";
+  if (pdy_sex == pdy_y_yinyang) {
+    // 男命阳年或女命阴年
+    pdy_dygz_str = ob.pdy_jgz_next;
+  } else {
+    // 男命阴年或女命阳年
+    pdy_dygz_str = ob.pdy_jgz_prev;
+  }
   obb.mingLiBaZi( jd+curTZ/24-J2000, Cp51_J.value/radd, ob ); //八字计算
   Cal51.innerHTML =
       '<font color=red>  <b>[日标]：</b></font>'+'公历 '+Cpdy_y.value+'-'+Cpdy_m.value+'-'+Cpdy_d.value + ' 儒略日数 ' + int2(jd+0.5) + ' 距2000年首' + int2(jd+0.5-J2000) + '日<br>'
     + '<font color=red  ><b>[八字]：</b></font>'    + ob.bz_jn+'年 '+ob.bz_jy+'月 '+ob.bz_jr+'日 '+ob.bz_js+'时 真太阳 <font color=red>' + ob.bz_zty+ '</font><br>'
     + '<font color=green><b>[纪时]：</b></font><i>' + ob.bz_JS + '</i><br>'
-    + '<font color=green><b>[时标]：</b></font><i>' + '23　 01　 03　 05　 07　 09　 11　 13　 15　 17　 19　 21　 23'
+    + '<font color=green><b>[时标]：</b></font><i>' + '23　 01　 03　 05　 07　 09　 11　 13　 15　 17　 19　 21　 23' + "</i>"
+    + '<br>'
+    + '<br><font color=red  ><b>[类型]：</b></font>'  + pdy_sex_str
     + '<br><font color=red  ><b>[阴阳年]：</b></font>'  + pdy_y_yinyang_str
+    + '<br><font color=red  ><b>[交运]：</b></font>'
+    + '<br><font color=red  ><b>[大运干支]：</b></font>'  + pdy_dygz_str
     ;
 }
 
