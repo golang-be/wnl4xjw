@@ -60,6 +60,7 @@
   <a href='javascript:showPage(11)'>八字</a>
   <a href='javascript:showPage(12)'>工具</a>
   <a href='javascript:showPage(13)'>常数</a>
+  <a href='javascript:showPage(51)'>排大运</a>
   <a href='readme.htm'>帮助</a>
   </td></tr>
 </table>
@@ -415,6 +416,18 @@ UTC/TD<input id=Cf_ut type=checkbox checked>
 <center><b>说明</b></center>
 　　年月长度的解析表达取自《2008年中国天文年历》，这些数据通常与早期IAU推荐值有关，常做为教科书标准参考值，本软件实际星历计算采用更理想的解析表达，以便与实际星历计算相符。行星质量系统取自JPL数值积分的初始值。黄经总岁差的IAU2000采用值与其它理论采用值几乎相同，每世纪一般只相差几个毫角秒。
 </td></tr>
+
+<!--排大运-->
+<tr id=page51 style="display:none"><td class=dBot2 colspan=2>
+  出生地经度 <input id=Cp51_J type=text size=10 value="0"> 公元
+  <input type=text id=Cpdy_y size=4 maxlength=5 value='2008'>年
+  <input type=text id=Cpdy_m size=2 maxlength=2 value='01'>月
+  <input type=text id=Cpdy_d size=2 maxlength=2 value='01'>日
+  <input type=text id=Cpdy_his size=8 value='12:00:00'>
+  <input type=button value="确定" onclick='PDY_calc()'>
+  <input type=button value="此刻" onclick='PDY_settime()'>
+  <div id=Cal51></div>
+ </td></tr>
 
 <!--版权区-->
 <tr><td class=dTop2 colspan=2 align=center> <font color=red> 邮箱 xunmeng04@163.com 许剑伟(福建莆田第十中学)保留版权 &copy; 2008-2009</font></td></tr>
@@ -1016,6 +1029,7 @@ function showPage(pg){
   page11.style.display='none';
   page12.style.display='none';
   page13.style.display='none';
+  page51.style.display='none';
   if(pg==1) page1.style.display='block';
   if(pg==2){page2.style.display='block'; getNianLi(0);} //年历
   if(pg==3){page3.style.display='block'; tu_calc(2);} //图表
@@ -1029,6 +1043,7 @@ function showPage(pg){
   if(pg==11) page11.style.display='block'; //命理八字
   if(pg==12) page12.style.display='block'; //工具
   if(pg==13) page13.style.display='block'; //常数表
+  if(pg==51) page51.style.display='block'; //排大运
 }
 
 /********************
@@ -1054,6 +1069,24 @@ function set_date_screen(fw){ //把当前时间置于屏幕的便入框之中
  curJD=int2(curJD+0.5);
 }
 set_date_screen(0);
+
+/********************
+排大运的时间初始化
+*********************/
+function PDY_set_date_screen() { //把当前时间置于屏幕的便入框之中
+  var now=new Date();
+  curTZ = now.getTimezoneOffset()/60; //时区 -8为北京时
+  curJD = now/86400000-10957.5 - curTZ/24; //J2000起算的儒略日数(当前本地时间)
+  JD.setFromJD(curJD+J2000);
+
+  Cpdy_y.value = JD.Y;
+  Cpdy_m.value = JD.M;
+  Cpdy_d.value = JD.D;
+  Cpdy_his.value = JD.h+':'+JD.m+':'+JD.s.toFixed(0);
+
+  curJD=int2(curJD+0.5);
+}
+PDY_set_date_screen();
 
 /****************
 外地时间选择
@@ -1107,7 +1140,8 @@ function change2(){
   Cb_J.value=(v.J/Math.PI*180).toFixed(6), Cb_W.value=(v.W/Math.PI*180).toFixed(6);
   Cf_J.value = Cd_J.value = Cp9_J.value = Cb_J.value;
   Cf_W.value = Cd_W.value = Cp9_W.value = Cb_W.value;
-  Cp11_J.value = Cb_J.value
+  Cp11_J.value = Cb_J.value;  // "八字"模块的经纬度文本框
+  Cp51_J.value = Cb_J.value;  // "排大运"模块的经纬度文本框
   Cal_zdzb.innerHTML = '经 '+rad2str2(v.J) + ' 纬 '+rad2str2(v.W);
   showMessD(-2);
   storageL.setItem('Sel1',Sel1.selectedIndex,1000);
@@ -1148,6 +1182,24 @@ function ML_calc(){
 //ML_calc(); //在时间、地标初始化完成后就可执行
 
 function ML_settime(){ set_date_screen(1); ML_calc(); }
+
+/**********************
+排大运计算
+**********************/
+function PDY_calc() {
+  var ob=new Object();
+  var t = timeStr2hour(Cpdy_his.value);
+  var jd=JD.JD(year2Ayear(Cpdy_y.value), Cpdy_m.value-0, Cpdy_d.value-0+t/24)
+
+  obb.mingLiBaZi( jd+curTZ/24-J2000, Cp51_J.value/radd, ob ); //八字计算
+  Cal51.innerHTML =
+      '<font color=red>  <b>[日标]：</b></font>'+'公历 '+Cpdy_y.value+'-'+Cpdy_m.value+'-'+Cpdy_d.value + ' 儒略日数 ' + int2(jd+0.5) + ' 距2000年首' + int2(jd+0.5-J2000) + '日<br>'
+    + '<font color=red  ><b>[八字]：</b></font>'    + ob.bz_jn+'年 '+ob.bz_jy+'月 '+ob.bz_jr+'日 '+ob.bz_js+'时 真太阳 <font color=red>' + ob.bz_zty+ '</font><br>'
+    + '<font color=green><b>[纪时]：</b></font><i>' + ob.bz_JS + '</i><br>'
+    + '<font color=green><b>[时标]：</b></font><i>' + '23　 01　 03　 05　 07　 09　 11　 13　 15　 17　 19　 21　 23';
+}
+
+function PDY_settime(){ PDY_set_date_screen(); PDY_calc(); }
 
 /**********************
 月历的年、月跳转控制函数
