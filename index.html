@@ -1274,6 +1274,31 @@ function PDY_calc() {
     // 男命阴年或女命阳年
     pdy_dygz_str = ob.pdy_ygz_prev[0];
   }
+
+  //////////
+  // 流年
+  //////////
+  var ii;
+  // 大运
+  var strLN_DaYun = "";
+  var target_ygz = null;
+  if (pdy_sex == pdy_y_yinyang) {
+    target_ygz = ob.pdy_ygz_next;
+  } else {
+    target_ygz = ob.pdy_ygz_prev;
+  }
+  for(ii=0; ii<10; ii++) {
+    strLN_DaYun += '' + target_ygz[ii] + '    ';
+  }
+  // 年份
+  var strLN_Year = "";
+  var firstJiaoYunYear = resultDateObj.getFullYear();
+  for(ii=0; ii<10; ii++) {
+    strLN_Year += '' + (firstJiaoYunYear + 10*ii) + '    ';
+  }
+
+
+
   obb.mingLiBaZi( jd+curTZ/24-J2000, Cp51_J.value/radd, ob ); //八字计算
   Cal51.innerHTML =
       ''
@@ -1288,6 +1313,22 @@ function PDY_calc() {
     + '<br><font color=red  ><b>[交运信息2]：</b></font>' + jyJieStr2
     + '<br><font color=red  ><b>[交运信息3]：</b></font>' + jyJieStr3
     + '<br><font color=red  ><b>[大运干支]：</b></font>'  + pdy_dygz_str
+    + '<br>'
+    + '<br><font color=red  ><b>[排流年]：</b></font>'
+    + '<br><font color=red  ><b>[__大运]：</b></font>'  + strLN_DaYun
+    + '<br><font color=red  ><b>[__年份]：</b></font>'  + strLN_Year
+    + '<br><font color=red  ><b>[流年01]：</b></font>'
+    + '<br><font color=red  ><b>[流年02]：</b></font>'
+    + '<br><font color=red  ><b>[流年03]：</b></font>'
+    + '<br><font color=red  ><b>[流年04]：</b></font>'
+    + '<br><font color=red  ><b>[流年05]：</b></font>'
+    + '<br><font color=red  ><b>[流年06]：</b></font>'
+    + '<br><font color=red  ><b>[流年07]：</b></font>'
+    + '<br><font color=red  ><b>[流年08]：</b></font>'
+    + '<br><font color=red  ><b>[流年09]：</b></font>'
+    + '<br><font color=red  ><b>[流年10]：</b></font>'
+    + '<br>'
+    + '<br>'
     + '<br><br><br><font color=red  ><b>[以下为人工核对用的调试信息]：</b></font>'  + '<br>' + strDebugAllJie
     ;
 }
