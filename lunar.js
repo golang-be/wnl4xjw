@@ -359,6 +359,106 @@ var obb={ //农历基础构件
   }
  },
 
+
+  // 排大运计算。
+  // jd为格林尼治UT(J2000起算),J为本地经度,返回在物件ob中
+  //    ob.bz_zty: 真太阳时间
+  //    ob.bz_jn: 年干支
+  //    ob.bz_jy: 月干支
+  //    ob.bz_jr: 日干支
+  //    ob.bz_js: 纪时结果（单个）
+  //    ob.bz_JS: 带纪时结果标红的全天纪时的字符串
+  //    ob.pdy_nian_yinyang: 排大运的阴年阳年，1表示阳年，0表示阴年。阳年(年干为甲、丙、戊、庚、壬)，阴年(年干为乙、丁、己、辛、癸)
+  //    ob.pdy_jgz_prev: 月干支逆排(用于大运干支计算)
+  //    ob.pdy_jgz_next: 月干支顺排(用于大运干支计算)
+  paiDaYun:function(jd,J,ob) {
+    var i, c, v;
+    var jd2 = jd+dt_T(jd); //力学时
+    var w = XL.S_aLon( jd2/36525, -1 ); //此刻太阳视黄经
+    var k = int2( (w/pi2*360+45+15*360)/30 ); //1984年立春起算的节气数(不含中气)
+    jd += pty_zty2(jd2/36525)+J/Math.PI/2; //本地真太阳时(使用低精度算法计算时差)
+    ob.bz_zty = JD.timeStr(jd);
+
+    jd += 13/24; //转为前一日23点起算(原jd为本日中午12点起算)
+    var D = Math.floor(jd), SC = int2( (jd-D)*12 ); //日数与时辰
+
+    v = int2(k/12+6000000);   ob.bz_jn = this.Gan[v%10]+this.Zhi[v%12];
+                              ob.pdy_nian_yinyang = (((v%10)%2) == 0)?(1):(0);
+    v = k+2+60000000;         ob.bz_jy = this.Gan[v%10]+this.Zhi[v%12];
+                              ob.pdy_jgz_prev = this.Gan[(v-1)%10]+this.Zhi[(v-1)%12];
+                              ob.pdy_jgz_next = this.Gan[(v+1)%10]+this.Zhi[(v+1)%12];
+    v = D - 6 + 9000000;      ob.bz_jr = this.Gan[v%10]+this.Zhi[v%12];
+    v = (D-1)*12+90000000+SC; ob.bz_js = this.Gan[v%10]+this.Zhi[v%12];
+
+    v-= SC, ob.bz_JS = ''; //全天纪时表
+    for(i=0; i<13; i++){ //一天中包含有13个纪时
+      c = this.Gan[(v+i)%10]+this.Zhi[(v+i)%12]; //各时辰的八字
+      if(SC==i) ob.bz_js=c, c = '<font color=red>'+c+'</font>'; //红色显示这时辰
+      ob.bz_JS += (i?' ':'') + c;
+    }
+  },
+
+  // 参考了qiCalc()函数
+  paiDaYun_JieQi:function(v_year, v_month, v_day, v_timeStr, outObj) {
+    // 从上一年开始循环查找每个节气的"节"，忽略节气的"气"
+    var startYear = v_year-1;
+    var nMaxCnt = 72; // 最多查找72个节气(3年)
+
+    // 存放用户输入的日期信息
+    userInputDateStr = v_year+"-"+v_month+"-"+v_day+" "+v_timeStr;
+    outObj.userDateStr = userInputDateStr;
+    outObj.userDateObj = new Date(userInputDateStr);
+
+    // 存放用户输入日期前后相邻的"节"的日期信息对象
+    outObj.prevJieObj = null;
+    outObj.nextJieObj = null;
+
+    // 存放用户输入的日期附近的"节"的日期信息对象数组
+    outObj.arrJie = new Array();
+
+    var i,T,s="",s2="";
+    var y = year2Ayear(startYear)-2000;
+    var n = nMaxCnt-0;
+    for(i = 0; i < n; i++) {
+      // 跳过24节气中的"气"，只考虑obb.jqmc中1、3、5、7、9、11、13、15、17、19、21、23的下标
+      if ((i%2)==0) {
+        continue;
+      }
+
+      // 插入当前"节"的存储对象
+      var currJieObj = new Object();
+      outObj.arrJie.push(currJieObj);
+
+      // 计算当前"节"的详细信息
+      T = XL.S_aLon_t( (y+i*15/360+1)*2*Math.PI );    //精确节气时间计算
+      var jd = T*36525+J2000+8/24-dt_T(T*36525);  // 儒略日
+      var jd_str = JD.JD2str(jd);                 // 儒略日转字符串，形如："2008-03-20 13:48:17"
+      var jqmc_str = obb.jqmc[(i+6)%24];          // 节气名称字符串，形如："春分"
+      var dateObj = new Date(jd_str);             // 把所有jd_str转成Date对象
+
+      // 存储所有信息到当前"节"的存储对象
+      currJieObj.jd = jd;
+      currJieObj.jd_str = jd_str;
+      currJieObj.jqmc_str = jqmc_str;
+      currJieObj.dateObj = dateObj;
+
+      // 根据循环顺序，依次用当前节的(timestamp-用户输入时间的timestamp)
+      // 如果结果是负数，就更新outObj.prevJieObj, 每次覆盖之前的结果，以便求出最邻近用户日期的前一个"节"
+      // 如果结果是正数，就更新outObj.nextJieObj, 但是这个只更新一次，以便求出最邻近用户日期的后一个"节"
+      if ((currJieObj.dateObj.getTime() - outObj.userDateObj.getTime()) == 0) {
+        // 特殊情况正巧出生时刻就是某个"节"那么其前后相邻"节"都以这个节算
+        outObj.prevJieObj = currJieObj;
+        if (outObj.nextJieObj == null) {
+          outObj.nextJieObj = currJieObj;
+        }
+      } else if ((currJieObj.dateObj.getTime() - outObj.userDateObj.getTime()) < 0) {
+        outObj.prevJieObj = currJieObj;
+      } else if (outObj.nextJieObj == null) {
+        outObj.nextJieObj = currJieObj;
+      }
+    }
+  },
+
  qi_accurate : function(W)  { var t=XL.S_aLon_t(W)*36525;  return t - dt_T(t) + 8/24; }, //精气
  so_accurate : function(W)  { var t=XL.MS_aLon_t(W)*36525; return t - dt_T(t) + 8/24; }, //精朔
  qi_accurate2: function(jd) { //精气

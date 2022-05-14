@@ -2,7 +2,7 @@
 <head>
 <TITLE>寿星天文历</TITLE>
 <META content="寿星天文历;万年历;农历;农历计算;算法;天文算法;伊斯兰历;回历;节气;交节时刻"  name=keywords>
-<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <style>
@@ -60,6 +60,7 @@
   <a href='javascript:showPage(11)'>八字</a>
   <a href='javascript:showPage(12)'>工具</a>
   <a href='javascript:showPage(13)'>常数</a>
+  <a href='javascript:showPage(51)'>排大运</a>
   <a href='readme.htm'>帮助</a>
   </td></tr>
 </table>
@@ -415,6 +416,23 @@ UTC/TD<input id=Cf_ut type=checkbox checked>
 <center><b>说明</b></center>
 　　年月长度的解析表达取自《2008年中国天文年历》，这些数据通常与早期IAU推荐值有关，常做为教科书标准参考值，本软件实际星历计算采用更理想的解析表达，以便与实际星历计算相符。行星质量系统取自JPL数值积分的初始值。黄经总岁差的IAU2000采用值与其它理论采用值几乎相同，每世纪一般只相差几个毫角秒。
 </td></tr>
+
+<!--排大运-->
+<tr id=page51 style="display:none"><td class=dBot2 colspan=2>
+  性别
+  <select id=Cpdy_sex>
+    <option value=0 selected>女</option>
+    <option value=1>男</option>
+  </select>
+  出生地经度 <input id=Cp51_J type=text size=10 value="0"> 公元
+  <input type=text id=Cpdy_y size=4 maxlength=5 value='2008'>年
+  <input type=text id=Cpdy_m size=2 maxlength=2 value='01'>月
+  <input type=text id=Cpdy_d size=2 maxlength=2 value='01'>日
+  <input type=text id=Cpdy_his size=8 value='12:00:00'>
+  <input type=button value="确定" onclick='PDY_calc()'>
+  <input type=button value="此刻" onclick='PDY_settime()'>
+  <div id=Cal51></div>
+ </td></tr>
 
 <!--版权区-->
 <tr><td class=dTop2 colspan=2 align=center> <font color=red> 邮箱 xunmeng04@163.com 许剑伟(福建莆田第十中学)保留版权 &copy; 2008-2009</font></td></tr>
@@ -1016,6 +1034,7 @@ function showPage(pg){
   page11.style.display='none';
   page12.style.display='none';
   page13.style.display='none';
+  page51.style.display='none';
   if(pg==1) page1.style.display='block';
   if(pg==2){page2.style.display='block'; getNianLi(0);} //年历
   if(pg==3){page3.style.display='block'; tu_calc(2);} //图表
@@ -1029,6 +1048,7 @@ function showPage(pg){
   if(pg==11) page11.style.display='block'; //命理八字
   if(pg==12) page12.style.display='block'; //工具
   if(pg==13) page13.style.display='block'; //常数表
+  if(pg==51) page51.style.display='block'; //排大运
 }
 
 /********************
@@ -1054,6 +1074,24 @@ function set_date_screen(fw){ //把当前时间置于屏幕的便入框之中
  curJD=int2(curJD+0.5);
 }
 set_date_screen(0);
+
+/********************
+排大运的时间初始化
+*********************/
+function PDY_set_date_screen() { //把当前时间置于屏幕的便入框之中
+  var now=new Date();
+  curTZ = now.getTimezoneOffset()/60; //时区 -8为北京时
+  curJD = now/86400000-10957.5 - curTZ/24; //J2000起算的儒略日数(当前本地时间)
+  JD.setFromJD(curJD+J2000);
+
+  Cpdy_y.value = JD.Y;
+  Cpdy_m.value = JD.M;
+  Cpdy_d.value = JD.D;
+  Cpdy_his.value = JD.h+':'+JD.m+':'+JD.s.toFixed(0);
+
+  curJD=int2(curJD+0.5);
+}
+PDY_set_date_screen();
 
 /****************
 外地时间选择
@@ -1107,7 +1145,8 @@ function change2(){
   Cb_J.value=(v.J/Math.PI*180).toFixed(6), Cb_W.value=(v.W/Math.PI*180).toFixed(6);
   Cf_J.value = Cd_J.value = Cp9_J.value = Cb_J.value;
   Cf_W.value = Cd_W.value = Cp9_W.value = Cb_W.value;
-  Cp11_J.value = Cb_J.value
+  Cp11_J.value = Cb_J.value;  // "八字"模块的经纬度文本框
+  Cp51_J.value = Cb_J.value;  // "排大运"模块的经纬度文本框
   Cal_zdzb.innerHTML = '经 '+rad2str2(v.J) + ' 纬 '+rad2str2(v.W);
   showMessD(-2);
   storageL.setItem('Sel1',Sel1.selectedIndex,1000);
@@ -1148,6 +1187,108 @@ function ML_calc(){
 //ML_calc(); //在时间、地标初始化完成后就可执行
 
 function ML_settime(){ set_date_screen(1); ML_calc(); }
+
+/**********************
+排大运计算
+**********************/
+function PDY_calc() {
+  var ob=new Object();
+  var t = timeStr2hour(Cpdy_his.value);
+  var jd=JD.JD(year2Ayear(Cpdy_y.value), Cpdy_m.value-0, Cpdy_d.value-0+t/24)
+
+  obb.paiDaYun( jd+curTZ/24-J2000, Cp51_J.value/radd, ob ); //八字计算
+  // 计算性别
+  var pdy_sex = Cpdy_sex.value; // 0为女，1为男
+  var pdy_sex_str = (pdy_sex == 1)?("男命"):("女命");
+  // 计算指定时刻是阳年(年干为甲、丙、戊、庚、壬)还是阴年(年干为乙、丁、己、辛、癸)
+  var pdy_y_yinyang = ob.pdy_nian_yinyang;
+  var pdy_y_yinyang_str = (pdy_y_yinyang==1)?("阳年"):("阴年");
+  // 计算输入时刻的上一个节
+  // 计算输入时刻的下一个节
+  var objJieInfo = new Object();
+  obb.paiDaYun_JieQi(Cpdy_y.value-0, Cpdy_m.value-0, Cpdy_d.value-0, Cpdy_his.value, objJieInfo);
+  // 拼装调试输出信息
+  var i;
+  var strDebugAllJie = "";
+  strDebugAllJie += "用户输入日期:" + objJieInfo.userDateStr + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.userDateObj.getTime() + ") <br>";
+  strDebugAllJie += "用户输入日期的前一个节:" + objJieInfo.prevJieObj.jd_str + objJieInfo.prevJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.prevJieObj.dateObj.getTime() + ") <br>";
+  strDebugAllJie += "用户输入日期的后一个节:" + objJieInfo.nextJieObj.jd_str + objJieInfo.nextJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.nextJieObj.dateObj.getTime() + ") <br>";
+  strDebugAllJie += " <br>用户输入日期前后1年的其他节(人工核对用): <br>";
+  for (i=0; i<objJieInfo.arrJie.length; i++) {
+    var currJieObj = objJieInfo.arrJie[i];
+    strDebugAllJie += currJieObj.jd_str + currJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ currJieObj.dateObj.getTime() + ") <br>";
+  }
+  // 男命阳年或女命阴年，计算(下一个节-指定时刻)的差，3天折1年，算出几岁起运
+  // 男命阴年或女命阳年，计算(指定时刻-上一个节)的差，3天折1年，算出几岁起运
+  var targetJieObj = null;
+  var jyJieStr1 = "", jyJieStr2 = "", jyJieStr3 = "";
+  var deltaSec = 0;
+  if (pdy_sex == pdy_y_yinyang) {
+    // 男命阳年或女命阴年
+    targetJieObj = objJieInfo.nextJieObj;
+    jyJieStr1 = "距离下一个节";
+    deltaSec = (targetJieObj.dateObj.getTime() - objJieInfo.userDateObj.getTime())/1000;
+  } else {
+    // 男命阴年或女命阳年
+    targetJieObj = objJieInfo.prevJieObj;
+    jyJieStr1 = "距离上一个节";
+    deltaSec = (objJieInfo.userDateObj.getTime() - targetJieObj.dateObj.getTime())/1000;
+  }
+  var delta3Days = Math.floor(deltaSec/(3*24*3600));                  // 按3天折1年，将总秒数除以(3*86400)后向下取整得到年
+  var delta1Days = Math.floor(deltaSec/(24*3600))%3;                  // 按1天折4个月，将(总秒数%(3*86400))，再除以86400后向下取整得到有多少个4个月
+  var deltaShiChen = Math.floor(((deltaSec%(24*3600))/7200)*10)/10.0; // 按1时辰折10天，将(总秒数%(86400))，再除以7200后向下取整到小数点后1位，得到有多少个10天
+  jyJieStr1 += "(" + targetJieObj.jd_str + targetJieObj.jqmc_str + ")共" + deltaSec + "秒。"
+  jyJieStr1 += "相当于" + (delta3Days*3 + delta1Days) + "天又" + deltaShiChen*2 + "小时。"
+  jyJieStr2 += "相当于" + delta3Days + "个3天、" + delta1Days + "个1天、" + deltaShiChen + "个时辰。"
+  jyJieStr2 += "即出生后" + delta3Days + "年" + delta1Days*4 + "个月" + deltaShiChen*10 + "天后起运。"
+  // 计算出目标起运日期
+  var resultDateObj = null;
+  {
+    // 年和月直接叠加到现有输入值上
+    var resultYear = Cpdy_y.value-0 + delta3Days;
+    var resultMonth = Cpdy_m.value-0 + delta1Days*4;
+    if (resultMonth>12) {
+      resultYear += 1;
+      resultMonth -= 12
+    }
+    // 因为按时辰算出的天数可能超出若干个月，为了简化，直接按这些天的秒数，进行叠加。
+    var additionalSeconds = deltaShiChen*10*(24*3600);
+    var resultDateObj = new Date(resultYear + "-" + resultMonth + "-" + Cpdy_d.value + " " + Cpdy_his.value);
+    resultDateObj = new Date(resultDateObj.getTime() + additionalSeconds*1000);
+  }
+  jyJieStr3 += "即" + resultDateObj.getFullYear() + "-"+ (resultDateObj.getMonth()+1) + "-"+ resultDateObj.getDate() + " " + resultDateObj.getHours() + ":" + resultDateObj.getMinutes() + ":" + resultDateObj.getSeconds() + "时起运。"
+
+
+  // 大运干支计算
+  // 男命阳年或女命阴年，计算指定时刻的月柱干支的下一个干支，作为大运干支
+  // 男命阴年或女命阳年，计算指定时刻的月柱干支的上一个干支，作为大运干支
+  var pdy_dygz_str = "";
+  if (pdy_sex == pdy_y_yinyang) {
+    // 男命阳年或女命阴年
+    pdy_dygz_str = ob.pdy_jgz_next;
+  } else {
+    // 男命阴年或女命阳年
+    pdy_dygz_str = ob.pdy_jgz_prev;
+  }
+  obb.mingLiBaZi( jd+curTZ/24-J2000, Cp51_J.value/radd, ob ); //八字计算
+  Cal51.innerHTML =
+      ''
+    // + '<font color=red>  <b>[日标]：</b></font>'+'公历 '+Cpdy_y.value+'-'+Cpdy_m.value+'-'+Cpdy_d.value + ' 儒略日数 ' + int2(jd+0.5) + ' 距2000年首' + int2(jd+0.5-J2000) + '日<br>'
+    + '<font color=red  ><b>[八字]：</b></font>'    + ob.bz_jn+'年 '+ob.bz_jy+'月 '+ob.bz_jr+'日 '+ob.bz_js+'时 真太阳 <font color=red>' + ob.bz_zty+ '</font>'
+    // + '<br><font color=green><b>[纪时]：</b></font><i>' + ob.bz_JS + '</i>'
+    // + '<br><font color=green><b>[时标]：</b></font><i>' + '23　 01　 03　 05　 07　 09　 11　 13　 15　 17　 19　 21　 23' + "</i>"
+    + '<br>'
+    + '<br><font color=red  ><b>[类型]：</b></font>'  + pdy_sex_str
+    + '<br><font color=red  ><b>[阴阳年]：</b></font>'  + pdy_y_yinyang_str
+    + '<br><font color=red  ><b>[交运信息1]：</b></font>' + jyJieStr1
+    + '<br><font color=red  ><b>[交运信息2]：</b></font>' + jyJieStr2
+    + '<br><font color=red  ><b>[交运信息3]：</b></font>' + jyJieStr3
+    + '<br><font color=red  ><b>[大运干支]：</b></font>'  + pdy_dygz_str
+    + '<br><br><br><font color=red  ><b>[以下为人工核对用的调试信息]：</b></font>'  + '<br>' + strDebugAllJie
+    ;
+}
+
+function PDY_settime(){ PDY_set_date_screen(); PDY_calc(); }
 
 /**********************
 月历的年、月跳转控制函数
