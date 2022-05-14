@@ -1279,6 +1279,7 @@ function PDY_calc() {
   // 流年
   //////////
   var ii;
+  const dispColumn = 10;  // 总共显示多少列，显示10列就已经至少覆盖100岁。注意这个值最多不能超过20。
   // 大运
   var strLN_DaYun = "";
   var target_ygz = null;
@@ -1287,14 +1288,29 @@ function PDY_calc() {
   } else {
     target_ygz = ob.pdy_ygz_prev;
   }
-  for(ii=0; ii<10; ii++) {
+  for(ii=0; ii<dispColumn; ii++) {
     strLN_DaYun += '' + target_ygz[ii] + '    ';
   }
   // 年份
   var strLN_Year = "";
   var firstJiaoYunYear = resultDateObj.getFullYear();
-  for(ii=0; ii<10; ii++) {
-    strLN_Year += '' + (firstJiaoYunYear + 10*ii) + '    ';
+  var arrJiaoYunYears = new Array();        // 这个数组下面排流年也会用到
+  for(ii=0; ii<dispColumn; ii++) {
+    _currYear = firstJiaoYunYear + 10*ii;
+    arrJiaoYunYears.push(_currYear);
+    strLN_Year += '' + _currYear + '    ';
+  }
+  // 流年1
+  var strLN_Lines = new Array();  // 10行文字的数组
+  var jj;                         // 遍历10行流年用
+  for(jj=0; jj<10; jj++) {
+    var curr_line = "";
+    // 每一行的所有列的生成和拼接
+    for(ii=0; ii<dispColumn; ii++) {
+      _currYear = arrJiaoYunYears[ii] + jj;
+      curr_line += '' + obb.year2GanZhi(_currYear) + '    ';
+    }
+    strLN_Lines.push(curr_line);
   }
 
 
@@ -1315,18 +1331,18 @@ function PDY_calc() {
     + '<br><font color=red  ><b>[大运干支]：</b></font>'  + pdy_dygz_str
     + '<br>'
     + '<br><font color=red  ><b>[排流年]：</b></font>'
-    + '<br><font color=red  ><b>[__大运]：</b></font>'  + strLN_DaYun
-    + '<br><font color=red  ><b>[__年份]：</b></font>'  + strLN_Year
-    + '<br><font color=red  ><b>[流年01]：</b></font>'
-    + '<br><font color=red  ><b>[流年02]：</b></font>'
-    + '<br><font color=red  ><b>[流年03]：</b></font>'
-    + '<br><font color=red  ><b>[流年04]：</b></font>'
-    + '<br><font color=red  ><b>[流年05]：</b></font>'
-    + '<br><font color=red  ><b>[流年06]：</b></font>'
-    + '<br><font color=red  ><b>[流年07]：</b></font>'
-    + '<br><font color=red  ><b>[流年08]：</b></font>'
-    + '<br><font color=red  ><b>[流年09]：</b></font>'
-    + '<br><font color=red  ><b>[流年10]：</b></font>'
+    + '<br><font color=red  ><b>[<大运>]：</b></font>'  + strLN_DaYun
+    + '<br><font color=red  ><b>[<年份>]：</b></font>'  + strLN_Year
+    + '<br><font color=red  ><b>[流年01]：</b></font>'  + strLN_Lines[0]
+    + '<br><font color=red  ><b>[流年02]：</b></font>'  + strLN_Lines[1]
+    + '<br><font color=red  ><b>[流年03]：</b></font>'  + strLN_Lines[2]
+    + '<br><font color=red  ><b>[流年04]：</b></font>'  + strLN_Lines[3]
+    + '<br><font color=red  ><b>[流年05]：</b></font>'  + strLN_Lines[4]
+    + '<br><font color=red  ><b>[流年06]：</b></font>'  + strLN_Lines[5]
+    + '<br><font color=red  ><b>[流年07]：</b></font>'  + strLN_Lines[6]
+    + '<br><font color=red  ><b>[流年08]：</b></font>'  + strLN_Lines[7]
+    + '<br><font color=red  ><b>[流年09]：</b></font>'  + strLN_Lines[8]
+    + '<br><font color=red  ><b>[流年10]：</b></font>'  + strLN_Lines[9]
     + '<br>'
     + '<br>'
     + '<br><br><br><font color=red  ><b>[以下为人工核对用的调试信息]：</b></font>'  + '<br>' + strDebugAllJie

@@ -405,6 +405,13 @@ var obb={ //农历基础构件
     }
   },
 
+  // 输入年份(如:1984)，输出年干支(如:甲子)
+  year2GanZhi:function(v_year) {
+    v = v_year + 6000000 - 1984;  // 1984年是甲子年，以次作为年干支的起始偏移
+    ret = "" + this.Gan[v%10]+this.Zhi[v%12];
+    return ret;
+  },
+
   // 参考了qiCalc()函数
   paiDaYun_JieQi:function(v_year, v_month, v_day, v_timeStr, outObj) {
     // 从上一年开始循环查找每个节气的"节"，忽略节气的"气"
