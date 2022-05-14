@@ -434,9 +434,7 @@ var obb={ //农历基础构件
       var jd = T*36525+J2000+8/24-dt_T(T*36525);  // 儒略日
       var jd_str = JD.JD2str(jd);                 // 儒略日转字符串，形如："2008-03-20 13:48:17"
       var jqmc_str = obb.jqmc[(i+6)%24];          // 节气名称字符串，形如："春分"
-      // s2 += jd_str + jqmc_str;                // 完整字串，形如："2008-03-20 13:48:17春分"
-      // 把所有jd_str转成Date对象A
-      var dateObj = new Date(jd_str);
+      var dateObj = new Date(jd_str);             // 把所有jd_str转成Date对象
 
       // 存储所有信息到当前"节"的存储对象
       currJieObj.jd = jd;
@@ -446,24 +444,18 @@ var obb={ //农历基础构件
 
       // 根据循环顺序，依次用当前节的(timestamp-用户输入时间的timestamp)
       // 如果结果是负数，就更新outObj.prevJieObj, 每次覆盖之前的结果，以便求出最邻近用户日期的前一个"节"
-      // 如果结果是>=0，就更新outObj.nextJieObj, 但是这个只更新一次，以便求出最邻近用户日期的后一个"节"
-      if ((currJieObj.dateObj.getTime() - outObj.userDateObj.getTime()) < 0) {
+      // 如果结果是正数，就更新outObj.nextJieObj, 但是这个只更新一次，以便求出最邻近用户日期的后一个"节"
+      if ((currJieObj.dateObj.getTime() - outObj.userDateObj.getTime()) == 0) {
+        // 特殊情况正巧出生时刻就是某个"节"那么其前后相邻"节"都以这个节算
+        outObj.prevJieObj = currJieObj;
+        if (outObj.nextJieObj == null) {
+          outObj.nextJieObj = currJieObj;
+        }
+      } else if ((currJieObj.dateObj.getTime() - outObj.userDateObj.getTime()) < 0) {
         outObj.prevJieObj = currJieObj;
       } else if (outObj.nextJieObj == null) {
         outObj.nextJieObj = currJieObj;
       }
-      //        (A-B)如果小于0，则记录下当前A为L，作为最邻近B的左侧值。然后开始计算下一个节的时间，继续转成Date对象A
-      //        (A-B)如果大于等于0了，则记录下当前A为R，作为最邻近B的右侧值。
-      //        L即为"关于该人生日的上一个节"
-      //        R即为"关于该人生日的下一个节"
-      //        因为保留了Date对象，所以可以计算和这人生日的所差秒数
-      //        按3天折1年，将总秒数除以(3*86400)后向下取整得到年
-      //        按1天折4个月，将(总秒数%(3*86400))，再除以86400后向下取整得到有多少个4个月
-      //        按1时辰折10天，将(总秒数%(86400))，再除以7200后向下取整到小数点后1位，得到有多少个10天
-
-
-      // if(i%2==1) s2+=' 视黄经'+(i*15)+'<br>'; else s2+='　'
-      // if(i%50==0) s+=s2,s2="";
     }
   },
 
