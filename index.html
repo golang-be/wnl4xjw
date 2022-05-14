@@ -1205,6 +1205,18 @@ function PDY_calc() {
   var pdy_y_yinyang_str = (pdy_y_yinyang==1)?("阳年"):("阴年");
   // 计算输入时刻的上一个节
   // 计算输入时刻的下一个节
+  var objJieInfo = new Object();
+  obb.paiDaYun_JieQi(Cpdy_y.value-0, Cpdy_m.value-0, Cpdy_d.value-0, Cpdy_his.value, objJieInfo);
+  var i;
+  var strAllJie = "";
+  strAllJie += "用户输入日期:" + objJieInfo.userDateStr + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.userDateObj.getTime() + ") <br>";
+  strAllJie += "用户输入日期的前一个节:" + objJieInfo.prevJieObj.jd_str + objJieInfo.prevJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.prevJieObj.dateObj.getTime() + ") <br>";
+  strAllJie += "用户输入日期的后一个节:" + objJieInfo.nextJieObj.jd_str + objJieInfo.nextJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.nextJieObj.dateObj.getTime() + ") <br>";
+  strAllJie += " <br>用户输入日期前后1年的其他节(人工核对用): <br>";
+  for (i=0; i<objJieInfo.arrJie.length; i++) {
+    var currJieObj = objJieInfo.arrJie[i];
+    strAllJie += currJieObj.jd_str + currJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ currJieObj.dateObj.getTime() + ") <br>";
+  }
   // 男命阳年或女命阴年，计算(下一个节-指定时刻)的差，3天折1年，算出几岁起运
   // 男命阴年或女命阳年，计算(指定时刻-上一个节)的差，3天折1年，算出几岁起运
 
@@ -1230,6 +1242,7 @@ function PDY_calc() {
     + '<br><font color=red  ><b>[阴阳年]：</b></font>'  + pdy_y_yinyang_str
     + '<br><font color=red  ><b>[交运]：</b></font>'
     + '<br><font color=red  ><b>[大运干支]：</b></font>'  + pdy_dygz_str
+    + '<br><font color=red  ><b>[调试]：</b></font>'  + '<br>' + strAllJie
     ;
 }
 
