@@ -1207,18 +1207,57 @@ function PDY_calc() {
   // 计算输入时刻的下一个节
   var objJieInfo = new Object();
   obb.paiDaYun_JieQi(Cpdy_y.value-0, Cpdy_m.value-0, Cpdy_d.value-0, Cpdy_his.value, objJieInfo);
+  // 拼装调试输出信息
   var i;
-  var strAllJie = "";
-  strAllJie += "用户输入日期:" + objJieInfo.userDateStr + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.userDateObj.getTime() + ") <br>";
-  strAllJie += "用户输入日期的前一个节:" + objJieInfo.prevJieObj.jd_str + objJieInfo.prevJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.prevJieObj.dateObj.getTime() + ") <br>";
-  strAllJie += "用户输入日期的后一个节:" + objJieInfo.nextJieObj.jd_str + objJieInfo.nextJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.nextJieObj.dateObj.getTime() + ") <br>";
-  strAllJie += " <br>用户输入日期前后1年的其他节(人工核对用): <br>";
+  var strDebugAllJie = "";
+  strDebugAllJie += "用户输入日期:" + objJieInfo.userDateStr + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.userDateObj.getTime() + ") <br>";
+  strDebugAllJie += "用户输入日期的前一个节:" + objJieInfo.prevJieObj.jd_str + objJieInfo.prevJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.prevJieObj.dateObj.getTime() + ") <br>";
+  strDebugAllJie += "用户输入日期的后一个节:" + objJieInfo.nextJieObj.jd_str + objJieInfo.nextJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ objJieInfo.nextJieObj.dateObj.getTime() + ") <br>";
+  strDebugAllJie += " <br>用户输入日期前后1年的其他节(人工核对用): <br>";
   for (i=0; i<objJieInfo.arrJie.length; i++) {
     var currJieObj = objJieInfo.arrJie[i];
-    strAllJie += currJieObj.jd_str + currJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ currJieObj.dateObj.getTime() + ") <br>";
+    strDebugAllJie += currJieObj.jd_str + currJieObj.jqmc_str + "(从1970.1.1 00:00:00经过的毫秒数: "+ currJieObj.dateObj.getTime() + ") <br>";
   }
   // 男命阳年或女命阴年，计算(下一个节-指定时刻)的差，3天折1年，算出几岁起运
   // 男命阴年或女命阳年，计算(指定时刻-上一个节)的差，3天折1年，算出几岁起运
+  var targetJieObj = null;
+  var jyJieStr1 = "", jyJieStr2 = "", jyJieStr3 = "";
+  var deltaSec = 0;
+  if (pdy_sex == pdy_y_yinyang) {
+    // 男命阳年或女命阴年
+    targetJieObj = objJieInfo.nextJieObj;
+    jyJieStr1 = "距离下一个节";
+    deltaSec = (targetJieObj.dateObj.getTime() - objJieInfo.userDateObj.getTime())/1000;
+  } else {
+    // 男命阴年或女命阳年
+    targetJieObj = objJieInfo.prevJieObj;
+    jyJieStr1 = "距离上一个节";
+    deltaSec = (objJieInfo.userDateObj.getTime() - targetJieObj.dateObj.getTime())/1000;
+  }
+  var delta3Days = Math.floor(deltaSec/(3*24*3600));                  // 按3天折1年，将总秒数除以(3*86400)后向下取整得到年
+  var delta1Days = Math.floor(deltaSec/(24*3600))%3;                  // 按1天折4个月，将(总秒数%(3*86400))，再除以86400后向下取整得到有多少个4个月
+  var deltaShiChen = Math.floor(((deltaSec%(24*3600))/7200)*10)/10.0; // 按1时辰折10天，将(总秒数%(86400))，再除以7200后向下取整到小数点后1位，得到有多少个10天
+  jyJieStr1 += "(" + targetJieObj.jd_str + targetJieObj.jqmc_str + ")共" + deltaSec + "秒。"
+  jyJieStr1 += "相当于" + (delta3Days*3 + delta1Days) + "天又" + deltaShiChen*2 + "小时。"
+  jyJieStr2 += "相当于" + delta3Days + "个3天、" + delta1Days + "个1天、" + deltaShiChen + "个时辰。"
+  jyJieStr2 += "即出生后" + delta3Days + "年" + delta1Days*4 + "个月" + deltaShiChen*10 + "天后起运。"
+  // 计算出目标起运日期
+  var resultDateObj = null;
+  {
+    // 年和月直接叠加到现有输入值上
+    var resultYear = Cpdy_y.value-0 + delta3Days;
+    var resultMonth = Cpdy_m.value-0 + delta1Days*4;
+    if (resultMonth>12) {
+      resultYear += 1;
+      resultMonth -= 12
+    }
+    // 因为按时辰算出的天数可能超出若干个月，为了简化，直接按这些天的秒数，进行叠加。
+    var additionalSeconds = deltaShiChen*10*(24*3600);
+    var resultDateObj = new Date(resultYear + "-" + resultMonth + "-" + Cpdy_d.value + " " + Cpdy_his.value);
+    resultDateObj = new Date(resultDateObj.getTime() + additionalSeconds*1000);
+  }
+  jyJieStr3 += "即" + resultDateObj.getFullYear() + "-"+ (resultDateObj.getMonth()+1) + "-"+ resultDateObj.getDate() + " " + resultDateObj.getHours() + ":" + resultDateObj.getMinutes() + ":" + resultDateObj.getSeconds() + "时起运。"
+
 
   // 大运干支计算
   // 男命阳年或女命阴年，计算指定时刻的月柱干支的下一个干支，作为大运干支
@@ -1233,16 +1272,19 @@ function PDY_calc() {
   }
   obb.mingLiBaZi( jd+curTZ/24-J2000, Cp51_J.value/radd, ob ); //八字计算
   Cal51.innerHTML =
-      '<font color=red>  <b>[日标]：</b></font>'+'公历 '+Cpdy_y.value+'-'+Cpdy_m.value+'-'+Cpdy_d.value + ' 儒略日数 ' + int2(jd+0.5) + ' 距2000年首' + int2(jd+0.5-J2000) + '日<br>'
-    + '<font color=red  ><b>[八字]：</b></font>'    + ob.bz_jn+'年 '+ob.bz_jy+'月 '+ob.bz_jr+'日 '+ob.bz_js+'时 真太阳 <font color=red>' + ob.bz_zty+ '</font><br>'
-    + '<font color=green><b>[纪时]：</b></font><i>' + ob.bz_JS + '</i><br>'
-    + '<font color=green><b>[时标]：</b></font><i>' + '23　 01　 03　 05　 07　 09　 11　 13　 15　 17　 19　 21　 23' + "</i>"
+      ''
+    // + '<font color=red>  <b>[日标]：</b></font>'+'公历 '+Cpdy_y.value+'-'+Cpdy_m.value+'-'+Cpdy_d.value + ' 儒略日数 ' + int2(jd+0.5) + ' 距2000年首' + int2(jd+0.5-J2000) + '日<br>'
+    + '<font color=red  ><b>[八字]：</b></font>'    + ob.bz_jn+'年 '+ob.bz_jy+'月 '+ob.bz_jr+'日 '+ob.bz_js+'时 真太阳 <font color=red>' + ob.bz_zty+ '</font>'
+    // + '<br><font color=green><b>[纪时]：</b></font><i>' + ob.bz_JS + '</i>'
+    // + '<br><font color=green><b>[时标]：</b></font><i>' + '23　 01　 03　 05　 07　 09　 11　 13　 15　 17　 19　 21　 23' + "</i>"
     + '<br>'
     + '<br><font color=red  ><b>[类型]：</b></font>'  + pdy_sex_str
     + '<br><font color=red  ><b>[阴阳年]：</b></font>'  + pdy_y_yinyang_str
-    + '<br><font color=red  ><b>[交运]：</b></font>'
+    + '<br><font color=red  ><b>[交运信息1]：</b></font>' + jyJieStr1
+    + '<br><font color=red  ><b>[交运信息2]：</b></font>' + jyJieStr2
+    + '<br><font color=red  ><b>[交运信息3]：</b></font>' + jyJieStr3
     + '<br><font color=red  ><b>[大运干支]：</b></font>'  + pdy_dygz_str
-    + '<br><font color=red  ><b>[调试]：</b></font>'  + '<br>' + strAllJie
+    + '<br><br><br><font color=red  ><b>[以下为人工核对用的调试信息]：</b></font>'  + '<br>' + strDebugAllJie
     ;
 }
 
