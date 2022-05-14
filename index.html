@@ -1269,10 +1269,10 @@ function PDY_calc() {
   var pdy_dygz_str = "";
   if (pdy_sex == pdy_y_yinyang) {
     // 男命阳年或女命阴年
-    pdy_dygz_str = ob.pdy_jgz_next;
+    pdy_dygz_str = ob.pdy_ygz_next[0];
   } else {
     // 男命阴年或女命阳年
-    pdy_dygz_str = ob.pdy_jgz_prev;
+    pdy_dygz_str = ob.pdy_ygz_prev[0];
   }
   obb.mingLiBaZi( jd+curTZ/24-J2000, Cp51_J.value/radd, ob ); //八字计算
   Cal51.innerHTML =
