@@ -405,7 +405,10 @@ var obb={ //农历基础构件
     var nMaxCnt = 72; // 最多查找72个节气(3年)
 
     // 存放用户输入的日期信息
-    userInputDateStr = v_year+"-"+v_month+"-"+v_day+" "+v_timeStr;
+    var arrHHMMSS = v_timeStr.split(":");
+    var userInputDateStr = v_year+"-"+String(v_month).padStart(2,'0')+"-"+String(v_day).padStart(2,'0');
+    userInputDateStr += "T"+arrHHMMSS[0].padStart(2,'0')+":"+arrHHMMSS[1].padStart(2,'0')+":"+arrHHMMSS[2].padStart(2,'0');
+    userInputDateStr += "+08:00";
     outObj.userDateStr = userInputDateStr;
     outObj.userDateObj = new Date(userInputDateStr);
 
@@ -432,9 +435,17 @@ var obb={ //农历基础构件
       // 计算当前"节"的详细信息
       T = XL.S_aLon_t( (y+i*15/360+1)*2*Math.PI );    //精确节气时间计算
       var jd = T*36525+J2000+8/24-dt_T(T*36525);  // 儒略日
-      var jd_str = JD.JD2str(jd);                 // 儒略日转字符串，形如："2008-03-20 13:48:17"
+      var jd_str = JD.JD2str(jd);                 // 儒略日转字符串，形如："2008-3-20 1:48:17"
       var jqmc_str = obb.jqmc[(i+6)%24];          // 节气名称字符串，形如："春分"
-      var dateObj = new Date(jd_str);             // 把所有jd_str转成Date对象
+
+      // 将形如"2008-3-20 1:48:17"的jd_str处理成形如"2008-03-20T01:48:17"的标准时间字符串，以便Safari兼容
+      var jd_str_split_result = jd_str.trim().split(' ');
+      var jd_str_split_date = jd_str_split_result[0].split('-');
+      var jd_str_split_hhmmss = jd_str_split_result[1].split(':');
+      var jd_str_new = jd_str_split_date[0]+"-"+jd_str_split_date[1].padStart(2,'0')+"-"+jd_str_split_date[2].padStart(2,'0');
+      jd_str_new += "T"+jd_str_split_hhmmss[0].padStart(2,'0')+":"+jd_str_split_hhmmss[1].padStart(2,'0')+":"+jd_str_split_hhmmss[2].padStart(2,'0');
+      jd_str_new += "+08:00";
+      var dateObj = new Date(jd_str_new);             // 把所有jd_str转成Date对象
 
       // 存储所有信息到当前"节"的存储对象
       currJieObj.jd = jd;

@@ -1253,7 +1253,11 @@ function PDY_calc() {
     }
     // 因为按时辰算出的天数可能超出若干个月，为了简化，直接按这些天的秒数，进行叠加。
     var additionalSeconds = deltaShiChen*10*(24*3600);
-    var resultDateObj = new Date(resultYear + "-" + resultMonth + "-" + Cpdy_d.value + " " + Cpdy_his.value);
+    var arrHHMMSS = Cpdy_his.value.split(":");
+    var tmpDateStr = resultYear + "-" + String(resultMonth).padStart(2,'0') + "-" + String(Cpdy_d.value).padStart(2,'0');
+    tmpDateStr += "T"+arrHHMMSS[0].padStart(2,'0')+":"+arrHHMMSS[1].padStart(2,'0')+":"+arrHHMMSS[2].padStart(2,'0');
+    tmpDateStr += "+08:00";
+    var resultDateObj = new Date(tmpDateStr);
     resultDateObj = new Date(resultDateObj.getTime() + additionalSeconds*1000);
   }
   jyJieStr3 += "即" + resultDateObj.getFullYear() + "-"+ (resultDateObj.getMonth()+1) + "-"+ resultDateObj.getDate() + " " + resultDateObj.getHours() + ":" + resultDateObj.getMinutes() + ":" + resultDateObj.getSeconds() + "时起运。"
