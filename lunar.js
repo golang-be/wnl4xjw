@@ -210,6 +210,14 @@ var obb={ //农历基础构件
  numCn : new Array('零','一','二','三','四','五','六','七','八','九','十'), //中文数字
  Gan:new Array("甲","乙","丙","丁","戊","己","庚","辛","壬","癸"),
  Zhi:new Array("子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"),
+ GanZhi:new Array(
+                  "甲子","乙丑","丙寅","丁卯","戊辰","己巳","庚午","辛未","壬申","癸酉",
+                  "甲戌","乙亥","丙子","丁丑","戊寅","己卯","庚辰","辛巳","壬午","癸未",
+                  "甲申","乙酉","丙戌","丁亥","戊子","己丑","庚寅","辛卯","壬辰","癸巳",
+                  "甲午","乙未","丙申","丁酉","戊戌","己亥","庚子","辛丑","壬寅","癸卯",
+                  "甲辰","乙巳","丙午","丁未","戊申","己酉","庚戌","辛亥","壬子","癸丑",
+                  "甲寅","乙卯","丙辰","丁巳","戊午","己未","庚申","辛酉","壬戌","癸亥",
+                  ),
  ShX:new Array("鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"),
  XiZ:new Array('摩羯','水瓶','双鱼','白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手'),
  yxmc:new Array("朔","上弦","望","下弦"), //月相名称表
@@ -359,6 +367,150 @@ var obb={ //农历基础构件
   }
  },
 
+ // 从八字逆推可能的日期，公元前3000年到
+ // in_J: 本地经度
+ // in_bzjn: 年干支
+ // in_bzjy: 年干支
+ // in_bzjr: 年干支
+ // in_bzjs: 时干支（13种: 戊子/23 己丑/1 庚寅/3 辛卯/5 壬辰/7 癸巳/9 甲午/11 乙未/13 丙申/15 丁酉/17 戊戌/19 己亥/21 庚子/23）
+ mingLiBaZi_reverse:function(in_J, in_bzjn, in_bzjy, in_bzjr, in_bzjs, retObj){
+  // 因为年月干支都是60年循环的，所以即使年月干支拼接在一起，也是60年循环的。
+  // 生成两个数组，分别含有1984年2月(春分后)开始60年的年月干支循环的年月字符串和年月干支(年干支加月干支)字符串。
+  // 这样方便通过输入年月干支，直接得到1984年后的某月是这个年月干支，之后每往前减60年，就是一个相同的年月干支点月。
+  var NianYueStr_since1984_Feb = new Array();
+  var NianYueGanZhi_since1984_Feb = new Array();
+  var v;
+  var i=0, yyyy=1984, mm=1;
+  var totalMonth = 60*12;
+  for (i=0; i<720; i++) {
+    mm++;
+    if (mm>12) {mm=1;yyyy+=1;}
+    // var nianyueRiqiStr = "" + yyyy + "-" + String(mm).padStart(2, "0");
+    var nianyueObj = new Object; nianyueObj.year=yyyy; nianyueObj.month=mm;
+    var nianyueGanzhiStr = "";
+    v = int2(i/12+6000000);   nianyueGanzhiStr += this.Gan[v%10]+this.Zhi[v%12];
+    v = i+2+60000000;         nianyueGanzhiStr += this.Gan[v%10]+this.Zhi[v%12];
+
+    NianYueStr_since1984_Feb.push(nianyueObj);
+    NianYueGanZhi_since1984_Feb.push(nianyueGanzhiStr);
+  }
+
+  var nianGanZhiId  = this.GanZhi.indexOf(in_bzjn);  // 0-59
+  var yueGanZhiId   = this.GanZhi.indexOf(in_bzjy);  // 0-59
+  var riGanZhiId    = this.GanZhi.indexOf(in_bzjr);  // 0-59
+
+  var bzjnjy = ""+in_bzjn+in_bzjy;
+  var nianyueGanZhiId  = NianYueGanZhi_since1984_Feb.indexOf(bzjnjy);  // 0-719
+  if (nianyueGanZhiId == -1) {
+    console.log("无法找到对应的年月干支：" + bzjnjy);
+  } else {
+    var nianyueObjSince1984 = NianYueStr_since1984_Feb[nianyueGanZhiId];
+    console.log("输入的年月干支在1984年2月后的首次匹配年月：" + nianyueObjSince1984.year + "年" + nianyueObjSince1984.month + "月");
+  }
+
+  var resultDayArray = new Array(); // 精确到命中日+-24小时的结果数组
+  var resultHourArray = new Array(); // 精确到命中小时的结果数组（最终结果数组）
+
+  var currYYYY = nianyueObjSince1984.year - 2040; // 减到公元前开始计算，必须减60的倍数，2040=34*60
+  var currMM = nianyueObjSince1984.month;
+  for (currYYYY; currYYYY<3000; currYYYY+=60) {
+    // 1. 转换改年月的1日为Date对象
+    var currYYYY_str = ""+currYYYY;
+    var is_BC_input = currYYYY_str.startsWith('-'); // 对于公元前的纪年，即负数，需要特别处理成-00000x的6位数年份
+    if (is_BC_input) {currYYYY_str = currYYYY_str.substring(1);}  // 去除公元前的负号，事后再补
+    var centerDateStr = "";
+    if (is_BC_input) {
+      centerDateStr = "-" + currYYYY_str.padStart(6,'0')+"-"+String(currMM).padStart(2,'0')+"-"+String(1).padStart(2,'0');
+    } else {
+      centerDateStr = currYYYY_str.padStart(4,'0')+"-"+String(currMM).padStart(2,'0')+"-"+String(1).padStart(2,'0');
+    }
+    centerDateStr += "T00:00:00";
+    centerDateStr += "+08:00";
+    var centerDateObj = new Date(Date.parse(centerDateStr));
+    var centerDateObjTS = centerDateObj.getTime();
+
+    // 2. 然后往更早的时间推35天(86400秒*35)，往更晚的时间推70天(86400秒*35*2)，以便覆盖所有可能的年干支月干支范围
+    // 3. 循环对每一天0点进行一次八字计算，看年月日的干支是否匹配，如果匹配，则记下这天作为符合条件的预选日（一旦命中，就停止这年的处理循环，处理下一个60年）
+    var deltaDay;
+    var trueFoundInThisYear = false;
+    for (deltaDay = -35; deltaDay<=70; deltaDay++) {
+      var currDateObj = new Date(centerDateObjTS + deltaDay*86400*1000);
+      var currFullYear = currDateObj.getFullYear();
+      var currMonth = currDateObj.getMonth()+1;
+      var currDate = currDateObj.getDate();
+
+      var ob=new Object();
+      var now=new Date();
+      var curTimeZone = now.getTimezoneOffset()/60; //时区 -8为北京时
+      var jd=JD.JD(year2Ayear(currFullYear), currMonth, currDate);
+      this.mingLiBaZi( jd+curTimeZone/24-J2000, in_J, ob ); //八字计算
+
+      if ((ob.bz_jn == in_bzjn) && (ob.bz_jy == in_bzjy) && (ob.bz_jr == in_bzjr)) {
+        var tmpObj = new Object();
+        tmpObj.deltaDay = deltaDay;
+        tmpObj.year = currFullYear;
+        tmpObj.month = currMonth;
+        tmpObj.date = currDate;
+
+        resultDayArray.push(tmpObj);
+        trueFoundInThisYear = true;
+
+        break;
+      }
+    }
+
+    // 4. 如果在这一年找到了符合条件的日，就进一步寻找时辰
+    // 对预选日取前后各48小时，每隔2小时，进行进行一次八字计算，看年月日时干支是否匹配，如果匹配，就记下这个时间参数作为这年的最终符合条件的时间点（一旦命中，就停止这年的处理循环，处理下一个60年）
+    if (trueFoundInThisYear) {
+      var deltaHour;
+      var centerDayObj = resultDayArray[resultDayArray.length-1];
+
+      var trueFoundInThisYear = false;
+      for (deltaHour = -48; deltaHour<=48; deltaHour+=2) {
+        var currFinalDateObj = new Date(centerDateObjTS + centerDayObj.deltaDay*86400*1000 + deltaHour*3600*1000);
+        var currFinalFullYear = currFinalDateObj.getFullYear();
+        var currFinalMonth = currFinalDateObj.getMonth()+1;
+        var currFinalDate = currFinalDateObj.getDate();
+        var currFinalHMS = "" + String(currFinalDateObj.getHours()).padStart(2,"0") + ":" + String(currFinalDateObj.getMinutes()).padStart(2,"0") + ":" + String(currFinalDateObj.getSeconds()).padStart(2,"0");
+
+        var ob=new Object();
+        var now=new Date();
+        var curTimeZone = now.getTimezoneOffset()/60; //时区 -8为北京时
+        var t = timeStr2hour(currFinalHMS);
+        var jd=JD.JD(year2Ayear(currFinalFullYear), currFinalMonth, currFinalDate-0+t/24);
+        this.mingLiBaZi( jd+curTimeZone/24-J2000, in_J, ob ); //八字计算
+
+        // 找到了匹配的年月日时
+        if ((ob.bz_jn == in_bzjn) && (ob.bz_jy == in_bzjy)
+          && (ob.bz_jr == in_bzjr) && (ob.bz_js == in_bzjs)) {
+        var tmpObj = new Object();
+          tmpObj.deltaHour = deltaHour;
+          tmpObj.deltaDay = centerDayObj.deltaDay;
+          tmpObj.year = currFinalFullYear;
+          tmpObj.month = currFinalMonth;
+          tmpObj.date = currFinalDate;
+          tmpObj.HMS = currFinalHMS;
+          tmpObj.dateObj = currFinalDateObj;
+
+          resultHourArray.push(tmpObj);
+          trueFoundInThisYear = true;
+
+          break;
+        }
+      }
+    }
+  }
+  // 调试输出
+  for (var jj=0;jj<resultDayArray.length;jj++) {
+    console.log("命中日期："+resultDayArray[jj].year + "年" + resultDayArray[jj].month + "月" + resultDayArray[jj].date + "日");
+  }
+
+  for (var jj=0;jj<resultHourArray.length;jj++) {
+    console.log("更精确命中日期："+resultHourArray[jj].year + "年" + resultHourArray[jj].month + "月" + resultHourArray[jj].date + "日");
+  }
+
+  retObj.finalResultArray = resultHourArray;
+},
 
   // 排大运计算。
   // jd为格林尼治UT(J2000起算),J为本地经度,返回在物件ob中

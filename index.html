@@ -61,6 +61,7 @@
   <a href='javascript:showPage(12)'>工具</a>
   <a href='javascript:showPage(13)'>常数</a>
   <a href='javascript:showPage(51)'>排大运</a>
+  <a href='javascript:showPage(52)'>八字逆算</a>
   <a href='readme.htm'>帮助</a>
   </td></tr>
 </table>
@@ -434,7 +435,20 @@ UTC/TD<input id=Cf_ut type=checkbox checked>
   <div id=Cal51></div>
  </td></tr>
 
-<!--版权区-->
+<!--八字逆算-->
+<tr id=page52 style="display:none"><td class=dBot2 colspan=2>
+  经度 <input id=Cp52_J type=text size=10 value="0"> 公元
+  <input type=text id=Cbzns_jn size=4 value='癸亥'>年
+  <input type=text id=Cbzns_jy size=4 value='乙丑'>月
+  <input type=text id=Cbzns_jr size=4 value='乙丑'>日
+  <input type=text id=Cbzns_js size=4 value='庚辰'>时
+  <!-- 公元4年7月2日00:30:00左右 -->
+  <input type=button value="确定" onclick='BZNS_calc()'>
+  <br>注意：输入年月日时干支时不要含有非干支的文字，否则会导致错误，需要刷新页面才可继续下一次的计算
+  <div id=Cal52></div>
+ </td></tr>
+
+ <!--版权区-->
 <tr><td class=dTop2 colspan=2 align=center> <font color=red> 邮箱 xunmeng04@163.com 许剑伟(福建莆田第十中学)保留版权 &copy; 2008-2009</font></td></tr>
 
 </table>
@@ -1035,6 +1049,7 @@ function showPage(pg){
   page12.style.display='none';
   page13.style.display='none';
   page51.style.display='none';
+  page52.style.display='none';
   if(pg==1) page1.style.display='block';
   if(pg==2){page2.style.display='block'; getNianLi(0);} //年历
   if(pg==3){page3.style.display='block'; tu_calc(2);} //图表
@@ -1049,6 +1064,7 @@ function showPage(pg){
   if(pg==12) page12.style.display='block'; //工具
   if(pg==13) page13.style.display='block'; //常数表
   if(pg==51) page51.style.display='block'; //排大运
+  if(pg==52) page52.style.display='block'; //八字逆算
 }
 
 /********************
@@ -1147,6 +1163,7 @@ function change2(){
   Cf_W.value = Cd_W.value = Cp9_W.value = Cb_W.value;
   Cp11_J.value = Cb_J.value;  // "八字"模块的经纬度文本框
   Cp51_J.value = Cb_J.value;  // "排大运"模块的经纬度文本框
+  Cp52_J.value = Cb_J.value;  // "八字逆算"模块的经纬度文本框
   Cal_zdzb.innerHTML = '经 '+rad2str2(v.J) + ' 纬 '+rad2str2(v.W);
   showMessD(-2);
   storageL.setItem('Sel1',Sel1.selectedIndex,1000);
@@ -1187,6 +1204,30 @@ function ML_calc(){
 //ML_calc(); //在时间、地标初始化完成后就可执行
 
 function ML_settime(){ set_date_screen(1); ML_calc(); }
+
+/**********************
+八字逆算
+**********************/
+function BZNS_calc(){
+  var retObj=new Object();
+  obb.mingLiBaZi_reverse(Cp52_J.value/radd, Cbzns_jn.value, Cbzns_jy.value, Cbzns_jr.value, Cbzns_js.value, retObj);
+
+  var resultHourArray = null;
+  var resultHtmlText = "";
+  if (retObj != null) {resultHourArray = retObj.finalResultArray;}
+  if (resultHourArray != null) {
+    resultHtmlText = "<font color=red>  <b>[命中时间(可能有若干小时偏差)](公元前56年到公元3000年)：</b></font><br>";
+    resultHtmlText += "<font color=red>  <b>[总共" + resultHourArray.length + "个]</b></font><br>";
+    for (var jj=0;jj<resultHourArray.length;jj++) {
+      resultHtmlText += resultHourArray[jj].year + "年" + resultHourArray[jj].month + "月" + resultHourArray[jj].date + "日" + resultHourArray[jj].HMS;
+      resultHtmlText += "<br>";
+    }
+  } else {
+    resultHtmlText = "<font color=red>  <b>执行出错，请记下输入的年月日时干支，以便调试时复查问题。</b></font><br>";
+  }
+
+  Cal52.innerHTML = resultHtmlText;
+}
 
 /**********************
 排大运计算
