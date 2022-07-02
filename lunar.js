@@ -210,6 +210,14 @@ var obb={ //农历基础构件
  numCn : new Array('零','一','二','三','四','五','六','七','八','九','十'), //中文数字
  Gan:new Array("甲","乙","丙","丁","戊","己","庚","辛","壬","癸"),
  Zhi:new Array("子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"),
+ GanZhi:new Array(
+                  "甲子","乙丑","丙寅","丁卯","戊辰","己巳","庚午","辛未","壬申","癸酉",
+                  "甲戌","乙亥","丙子","丁丑","戊寅","己卯","庚辰","辛巳","壬午","癸未",
+                  "甲申","乙酉","丙戌","丁亥","戊子","己丑","庚寅","辛卯","壬辰","癸巳",
+                  "甲午","乙未","丙申","丁酉","戊戌","己亥","庚子","辛丑","壬寅","癸卯",
+                  "甲辰","乙巳","丙午","丁未","戊申","己酉","庚戌","辛亥","壬子","癸丑",
+                  "甲寅","乙卯","丙辰","丁巳","戊午","己未","庚申","辛酉","壬戌","癸亥",
+                  ),
  ShX:new Array("鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"),
  XiZ:new Array('摩羯','水瓶','双鱼','白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手'),
  yxmc:new Array("朔","上弦","望","下弦"), //月相名称表
@@ -359,6 +367,49 @@ var obb={ //农历基础构件
   }
  },
 
+ // 从八字逆推可能的日期，公元前3000年到
+ // in_J: 本地经度
+ // in_bzjn: 年干支
+ // in_bzjy: 年干支
+ // in_bzjr: 年干支
+ // in_bzjs: 时干支（13种: 戊子/23 己丑/1 庚寅/3 辛卯/5 壬辰/7 癸巳/9 甲午/11 乙未/13 丙申/15 丁酉/17 戊戌/19 己亥/21 庚子/23）
+ mingLiBaZi_reverse:function(in_J, in_bzjn, in_bzjy, in_bzjr, in_bzjs, retObj){
+  // 因为年月干支都是60年循环的，所以即使年月干支拼接在一起，也是60年循环的。
+  // 生成两个数组，分别含有1984年2月(春分后)开始60年的年月干支循环的年月字符串和年月干支(年干支加月干支)字符串。
+  // 这样方便通过输入年月干支，直接得到1984年后的某月是这个年月干支，之后每往前减60年，就是一个相同的年月干支点月。
+  var NianYueStr_since1984_Feb = new Array();
+  var NianYueGanZhi_since1984_Feb = new Array();
+  var v;
+  var i=0, yyyy=1984, mm=1;
+  var totalMonth = 60*12;
+  for (i=0; i<720; i++) {
+    mm++;
+    if (mm>12) {mm=1;yyyy+=1;}
+    // var nianyueRiqiStr = "" + yyyy + "-" + String(mm).padStart(2, "0");
+    var nianyueObj = new Object; nianyueObj.year=yyyy; nianyueObj.month=mm;
+    var nianyueGanzhiStr = "";
+    v = int2(i/12+6000000);   nianyueGanzhiStr += this.Gan[v%10]+this.Zhi[v%12];
+    v = i+2+60000000;         nianyueGanzhiStr += this.Gan[v%10]+this.Zhi[v%12];
+
+    NianYueStr_since1984_Feb.push(nianyueObj);
+    NianYueGanZhi_since1984_Feb.push(nianyueGanzhiStr);
+  }
+
+  var nianGanZhiId  = this.GanZhi.indexOf(in_bzjn);  // 0-59
+  var yueGanZhiId   = this.GanZhi.indexOf(in_bzjy);  // 0-59
+  var riGanZhiId    = this.GanZhi.indexOf(in_bzjr);  // 0-59
+
+  var bzjnjy = ""+in_bzjn+in_bzjy;
+  var nianyueGanZhiId  = NianYueGanZhi_since1984_Feb.indexOf(bzjnjy);  // 0-719
+  if (nianyueGanZhiId == -1) {
+    console.log("无法找到对应的年月干支：" + bzjnjy);
+  } else {
+    var nianyueObjSince1984 = NianYueStr_since1984_Feb[nianyueGanZhiId];
+    console.log("输入的年月干支在1984年2月后的首次匹配年月：" + nianyueObjSince1984.year + "年" + nianyueObjSince1984.month + "月");
+  }
+
+  retObj = null;
+},
 
   // 排大运计算。
   // jd为格林尼治UT(J2000起算),J为本地经度,返回在物件ob中

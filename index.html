@@ -61,6 +61,7 @@
   <a href='javascript:showPage(12)'>工具</a>
   <a href='javascript:showPage(13)'>常数</a>
   <a href='javascript:showPage(51)'>排大运</a>
+  <a href='javascript:showPage(52)'>八字逆算</a>
   <a href='readme.htm'>帮助</a>
   </td></tr>
 </table>
@@ -434,7 +435,36 @@ UTC/TD<input id=Cf_ut type=checkbox checked>
   <div id=Cal51></div>
  </td></tr>
 
-<!--版权区-->
+<!--八字逆算-->
+<tr id=page52 style="display:none"><td class=dBot2 colspan=2>
+  经度 <input id=Cp52_J type=text size=10 value="0"> 公元
+  <input type=text id=Cbzns_y size=4 maxlength=5 value='2008'>年
+  <input type=text id=Cbzns_m size=2 maxlength=2 value='01'>月
+  <input type=text id=Cbzns_d size=2 maxlength=2 value='01'>日
+  <input type=text id=Cbzns_his size=8 value='12:00:00'>
+  <input type=text id=Cbzns_jn size=4 value='甲子'>年
+  <input type=text id=Cbzns_jy size=4 value='丁卯'>月
+  <input type=text id=Cbzns_jr size=4 value='甲子'>日
+  <select name="bzns_jishi" id="Cbzns_js">
+    <option value="戊子">戊子</option>
+    <option value="己丑">己丑</option>
+    <option value="庚寅">庚寅</option>
+    <option value="辛卯">辛卯</option>
+    <option value="壬辰">壬辰</option>
+    <option value="癸巳">癸巳</option>
+    <option value="甲午">甲午</option>
+    <option value="乙未">乙未</option>
+    <option value="丙申">丙申</option>
+    <option value="丁酉">丁酉</option>
+    <option value="戊戌">戊戌</option>
+    <option value="己亥">己亥</option>
+    <option value="庚子">庚子</option>
+  </select>时
+  <input type=button value="确定" onclick='BZNS_calc()'>
+  <div id=Cal52></div>
+ </td></tr>
+
+ <!--版权区-->
 <tr><td class=dTop2 colspan=2 align=center> <font color=red> 邮箱 xunmeng04@163.com 许剑伟(福建莆田第十中学)保留版权 &copy; 2008-2009</font></td></tr>
 
 </table>
@@ -1035,6 +1065,7 @@ function showPage(pg){
   page12.style.display='none';
   page13.style.display='none';
   page51.style.display='none';
+  page52.style.display='none';
   if(pg==1) page1.style.display='block';
   if(pg==2){page2.style.display='block'; getNianLi(0);} //年历
   if(pg==3){page3.style.display='block'; tu_calc(2);} //图表
@@ -1049,6 +1080,7 @@ function showPage(pg){
   if(pg==12) page12.style.display='block'; //工具
   if(pg==13) page13.style.display='block'; //常数表
   if(pg==51) page51.style.display='block'; //排大运
+  if(pg==52) page52.style.display='block'; //八字逆算
 }
 
 /********************
@@ -1187,6 +1219,14 @@ function ML_calc(){
 //ML_calc(); //在时间、地标初始化完成后就可执行
 
 function ML_settime(){ set_date_screen(1); ML_calc(); }
+
+/**********************
+八字逆算
+**********************/
+function BZNS_calc(){
+  var retObj=new Object();
+  obb.mingLiBaZi_reverse(Cp52_J.value/radd, Cbzns_jn.value, Cbzns_jy.value, Cbzns_jr.value, Cbzns_js.value, retObj);
+}
 
 /**********************
 排大运计算
