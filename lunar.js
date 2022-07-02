@@ -420,11 +420,19 @@ var obb={ //农历基础构件
 
     // 存放用户输入的日期信息
     var arrHHMMSS = v_timeStr.split(":");
-    var userInputDateStr = v_year+"-"+String(v_month).padStart(2,'0')+"-"+String(v_day).padStart(2,'0');
+    var v_year_str = String(v_year);
+    var is_BC_input = v_year_str.startsWith('-'); // 对于公元前的纪年，即负数，需要特别处理成-00000x的6位数年份
+    if (is_BC_input) {v_year_str = v_year_str.substring(1);}  // 去除公元前的负号，事后再补
+    var userInputDateStr = "";
+    if (is_BC_input) {
+      userInputDateStr = "-" + v_year_str.padStart(6,'0')+"-"+String(v_month).padStart(2,'0')+"-"+String(v_day).padStart(2,'0');
+    } else {
+      userInputDateStr = v_year_str.padStart(4,'0')+"-"+String(v_month).padStart(2,'0')+"-"+String(v_day).padStart(2,'0');
+    }
     userInputDateStr += "T"+arrHHMMSS[0].padStart(2,'0')+":"+arrHHMMSS[1].padStart(2,'0')+":"+arrHHMMSS[2].padStart(2,'0');
     userInputDateStr += "+08:00";
     outObj.userDateStr = userInputDateStr;
-    outObj.userDateObj = new Date(userInputDateStr);
+    outObj.userDateObj = new Date(Date.parse(userInputDateStr));
 
     // 存放用户输入日期前后相邻的"节"的日期信息对象
     outObj.prevJieObj = null;
@@ -453,13 +461,22 @@ var obb={ //农历基础构件
       var jqmc_str = obb.jqmc[(i+6)%24];          // 节气名称字符串，形如："春分"
 
       // 将形如"2008-3-20 1:48:17"的jd_str处理成形如"2008-03-20T01:48:17"的标准时间字符串，以便Safari兼容
+      // 小于四位数年份的形式是"0008-03-20T01:48:17"
+      // 公元前的形式是"-000008-03-20T01:48:17"
       var jd_str_split_result = jd_str.trim().split(' ');
+      var is_BC_jie = jd_str_split_result[0].startsWith('-'); // 对于公元前的纪年，即负数，需要特别处理成-00000x的6位数年份
+      if (is_BC_jie) {jd_str_split_result[0] = jd_str_split_result[0].substring(1);}  // 去除公元前的负号，事后再补
       var jd_str_split_date = jd_str_split_result[0].split('-');
       var jd_str_split_hhmmss = jd_str_split_result[1].split(':');
-      var jd_str_new = jd_str_split_date[0]+"-"+jd_str_split_date[1].padStart(2,'0')+"-"+jd_str_split_date[2].padStart(2,'0');
+      var jd_str_new = "";
+      if (is_BC_jie) {
+        jd_str_new = "-" + jd_str_split_date[0].padStart(6,'0')+"-"+jd_str_split_date[1].padStart(2,'0')+"-"+jd_str_split_date[2].padStart(2,'0');
+      } else {
+        jd_str_new = jd_str_split_date[0].padStart(4,'0')+"-"+jd_str_split_date[1].padStart(2,'0')+"-"+jd_str_split_date[2].padStart(2,'0');
+      }
       jd_str_new += "T"+jd_str_split_hhmmss[0].padStart(2,'0')+":"+jd_str_split_hhmmss[1].padStart(2,'0')+":"+jd_str_split_hhmmss[2].padStart(2,'0');
       jd_str_new += "+08:00";
-      var dateObj = new Date(jd_str_new);             // 把所有jd_str转成Date对象
+      var dateObj = new Date(Date.parse(jd_str_new));             // 把所有jd_str转成Date对象
 
       // 存储所有信息到当前"节"的存储对象
       currJieObj.jd = jd;
