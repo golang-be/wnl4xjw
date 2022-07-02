@@ -408,6 +408,59 @@ var obb={ //农历基础构件
     console.log("输入的年月干支在1984年2月后的首次匹配年月：" + nianyueObjSince1984.year + "年" + nianyueObjSince1984.month + "月");
   }
 
+  var resultDayArray = new Array(); // 精确到命中日+-24小时的结果数组
+  var currYYYY = nianyueObjSince1984.year - 2040; // 减到公元前开始计算，必须减60的倍数，2040=34*60
+  var currMM = nianyueObjSince1984.month;
+  for (currYYYY; currYYYY<3000; currYYYY+=60) {
+    // 1. 转换改年月的1日为Date对象
+    var currYYYY_str = ""+currYYYY;
+    var is_BC_input = currYYYY_str.startsWith('-'); // 对于公元前的纪年，即负数，需要特别处理成-00000x的6位数年份
+    if (is_BC_input) {currYYYY_str = currYYYY_str.substring(1);}  // 去除公元前的负号，事后再补
+    var centerDateStr = "";
+    if (is_BC_input) {
+      centerDateStr = "-" + currYYYY_str.padStart(6,'0')+"-"+String(currMM).padStart(2,'0')+"-"+String(1).padStart(2,'0');
+    } else {
+      centerDateStr = currYYYY_str.padStart(4,'0')+"-"+String(currMM).padStart(2,'0')+"-"+String(1).padStart(2,'0');
+    }
+    centerDateStr += "T00:00:00";
+    centerDateStr += "+08:00";
+    var centerDateObj = new Date(Date.parse(centerDateStr));
+    var centerDateObjTS = centerDateObj.getTime();
+
+    // 2. 然后往更早的时间推35天(86400秒*35)，往更晚的时间推70天(86400秒*35*2)，以便覆盖所有可能的年干支月干支范围
+    // 3. 循环对每一天0点进行一次八字计算，看年月日的干支是否匹配，如果匹配，则记下这天作为符合条件的预选日（一旦命中，就停止这年的处理循环，处理下一个60年）
+    var deltaDay;
+    for (deltaDay = -35; deltaDay<=70; deltaDay++) {
+      var currDateObj = new Date(centerDateObjTS + deltaDay*86400*1000);
+      var currFullYear = currDateObj.getFullYear();
+      var currMonth = currDateObj.getMonth()+1;
+      var currDate = currDateObj.getDate();
+
+      var ob=new Object();
+      var now=new Date();
+      var curTimeZone = now.getTimezoneOffset()/60; //时区 -8为北京时
+      var jd=JD.JD(year2Ayear(currFullYear), currMonth, currDate);
+      this.mingLiBaZi( jd+curTimeZone/24-J2000, in_J, ob ); //八字计算
+
+      if ((ob.bz_jn == in_bzjn) && (ob.bz_jy == in_bzjy) && (ob.bz_jr == in_bzjr)) {
+        var tmpObj = new Object();
+        tmpObj.year = currFullYear;
+        tmpObj.month = currMonth;
+        tmpObj.date = currDate;
+        resultDayArray.push(tmpObj);
+
+        break;
+      }
+    }
+
+    // 4. 对预选日取前后各48小时，每隔2小时，进行进行一次八字计算，看年月日时干支是否匹配，如果匹配，就记下这个时间参数作为这年的最终符合条件的时间点（一旦命中，就停止这年的处理循环，处理下一个60年）
+  }
+  // 调试输出
+  for (var jj=0;jj<resultDayArray.length;jj++) {
+    console.log("命中日期："+resultDayArray[jj].year + "年" + resultDayArray[jj].month + "月" + resultDayArray[jj].date + "日");
+  }
+
+
   retObj = null;
 },
 
